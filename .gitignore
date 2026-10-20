@@ -1,0 +1,14 @@
+.DS_Store
+.build/
+.swiftpm/
+dist/
+*.app/
+*.dSYM/
+*.xcuserstate
+xcuserdata/
+.env
+.env.*
+*.store
+*.store-*
+LocalEdits/
+DemoEdits/

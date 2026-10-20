@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>NativeNotes</string>
+<key>CFBundleIdentifier</key><string>local.NativeNotes.Milestone1</string>
+<key>CFBundleName</key><string>NativeNotes</string>
+<key>CFBundleIconFile</key><string>NativeNotes.icns</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.4.0</string>
+<key>CFBundleVersion</key><string>20</string>
+<key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>NSHighResolutionCapable</key><true/>
+<key>NSAppleEventsUsageDescription</key><string>NativeNotes 只读列出备忘录文件夹和标题，并在你选择后读取正文，保存到本机缓存。不会修改备忘录。</string>
+<key>UTExportedTypeDeclarations</key><array><dict><key>UTTypeIdentifier</key><string>local.nativenotes.editor-item</string><key>UTTypeConformsTo</key><array><string>public.data</string></array><key>UTTypeDescription</key><string>NativeNotes local editor item</string></dict></array></dict></plist>
