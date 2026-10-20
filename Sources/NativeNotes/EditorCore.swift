@@ -3,9 +3,15 @@ import AppKit
 import CryptoKit
 import UniformTypeIdentifiers
 
+// MARK: - Persistent document model
+
+/// A stable, codable table cell. Identity is preserved while rows and columns move.
 struct EditorCell: Codable, Identifiable, Equatable { var id = UUID().uuidString; var text = "" }
+/// A stable column identity shared by every row in an `EditorTable`.
 struct EditorColumn: Codable, Identifiable, Equatable { var id = UUID().uuidString }
+/// A table row whose cells always match the table's column count.
 struct EditorRow: Codable, Identifiable, Equatable { var id = UUID().uuidString; var cells: [EditorCell] }
+/// Rectangular table data stored inside a document block.
 struct EditorTable: Codable, Equatable {
     var columns: [EditorColumn]
     var rows: [EditorRow]
@@ -14,6 +20,7 @@ struct EditorTable: Codable, Equatable {
         self.rows = (0..<max(1, rows)).map { _ in EditorRow(cells: (0..<max(1, columns)).map { _ in EditorCell() }) }
     }
 }
+/// The semantic kinds supported by the block editor.
 enum BlockKind: String, Codable, CaseIterable, Identifiable {
     case paragraph, heading, todo, bullet, numbered, lowerAlpha, upperAlpha, lowerRoman, upperRoman, table
     var id: String { rawValue }
@@ -27,7 +34,9 @@ enum BlockKind: String, Codable, CaseIterable, Identifiable {
     var ordered: Bool { [.numbered, .lowerAlpha, .upperAlpha, .lowerRoman, .upperRoman].contains(self) }
     var isList: Bool { ordered || self == .bullet || self == .todo }
 }
+/// A three-state value because imported Notes HTML may omit checkbox state.
 enum TodoState: String, Codable { case unknown, open, done }
+/// The smallest independently editable and reorderable unit in a local document.
 struct EditorBlock: Codable, Identifiable, Equatable {
     var id = UUID().uuidString
     var kind: BlockKind = .paragraph
@@ -49,6 +58,7 @@ struct EditorBlock: Codable, Identifiable, Equatable {
         }
     }
 }
+/// Versioned on-disk representation of one local note.
 struct EditorDocument: Codable, Equatable {
     var version = 1
     var taskPresentation: Int? = nil
@@ -58,7 +68,9 @@ struct EditorDocument: Codable, Equatable {
     var title: String
     var blocks: [EditorBlock]
 }
+/// A one-shot focus request. The token lets repeated requests target the same block.
 struct EditorFocus: Equatable { var id: String; var cursor: Int; var token = UUID() }
+/// Cross-view drag payload scoped to a single document identifier.
 struct EditorDrag: Codable {
     static let type = "local.nativenotes.editor-item"
     var document: String
@@ -69,6 +81,9 @@ struct EditorDrag: Codable {
 }
 enum EditorDrop { case block(String), row(String, String), column(String, String), cell(String, String, String) }
 
+// MARK: - List parsing and source import
+
+/// Parses list shortcuts and produces display markers without storing derived text.
 enum ListRules {
     static func alpha(_ value: Int) -> String {
         var n = max(1, value), result = ""
@@ -107,6 +122,8 @@ enum ListRules {
     }
 }
 
+/// Converts the limited HTML/plain-text snapshot returned by Notes into editable blocks.
+/// Missing source semantics are kept unknown instead of being guessed.
 enum DocumentImporter {
     static func hash(_ html: String, _ text: String) -> String { SHA256.hash(data: Data((html + "\u{0}" + text).utf8)).map { String(format: "%02x", $0) }.joined() }
     static func make(title: String, html: String, text: String) -> EditorDocument {
@@ -173,6 +190,9 @@ enum DocumentImporter {
     }
 }
 
+// MARK: - Editing session and persistence
+
+/// Main-actor document controller responsible for edits, undo, validation and atomic saves.
 @MainActor final class LocalEditor: ObservableObject {
     @Published private(set) var document: EditorDocument
     @Published var focus: EditorFocus?
@@ -185,9 +205,11 @@ enum DocumentImporter {
     var hasSaved: Bool { expectedRevision != nil }
     @Published private(set) var undoStack: [EditorDocument] = []
     @Published private(set) var redoStack: [EditorDocument] = []
+    /// Keeps demo documents separate so UI testing cannot touch normal local edits.
     static func directory(demo: Bool) -> URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("NativeNotes/" + (demo ? "DemoEdits" : "LocalEdits"), isDirectory: true)
     }
+    /// Reuses an unsaved in-memory model for the same file rather than discarding edits.
     static func open(sourceID: String, title: String, html: String, text: String, directory: URL) -> LocalEditor {
         let key = SHA256.hash(data: Data(sourceID.utf8)).map { String(format: "%02x", $0) }.joined()
         let file = directory.appendingPathComponent(key + ".json")
@@ -220,6 +242,7 @@ enum DocumentImporter {
         EditorRegistry.models.removeAll { $0.value == nil }
         EditorRegistry.models.append(WeakEditor(self))
     }
+    /// Rejects unsupported or malformed documents before they can replace user data.
     static func valid(_ doc: EditorDocument) -> Bool {
         guard doc.version == 1, !doc.blocks.isEmpty, Set(doc.blocks.map(\.id)).count == doc.blocks.count else { return false }
         return doc.blocks.allSatisfy { b in
@@ -445,8 +468,11 @@ enum DocumentImporter {
         }
     }
 }
+/// Weak registration avoids retaining every editor window for the app lifetime.
 @MainActor final class WeakEditor { weak var value: LocalEditor?; init(_ value: LocalEditor) { self.value = value } }
+/// Tracks open models and strongly retains only sessions with unsaved changes.
 @MainActor enum EditorRegistry { static var models: [WeakEditor] = []; static var unsaved: [LocalEditor] = [] }
+/// Blocks termination while a recoverable local edit has not reached disk.
 @MainActor final class EditorAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let editors = EditorRegistry.models.compactMap(\.value)

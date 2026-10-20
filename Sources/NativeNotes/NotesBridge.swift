@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import Carbon
 
+/// Metadata available before the user chooses to import a note body.
 struct SourceNote: Identifiable, Sendable {
     let id: String
     let title: String
@@ -10,7 +11,9 @@ struct SourceNote: Identifiable, Sendable {
     var folderOnly: Bool = false
     var attachmentCount: Int? = nil
 }
+/// Read-only body snapshot returned by Apple Notes.
 struct NoteBody: Sendable { let title: String; let text: String; let html: String; let modified: Date? }
+/// Maps Apple Events failures to actionable, user-facing recovery guidance.
 struct NotesFailure: LocalizedError {
     let code: Int
     let detail: String
@@ -25,6 +28,8 @@ struct NotesFailure: LocalizedError {
         }
     }
 }
+/// Serializes read-only AppleScript access to Notes away from the main actor.
+/// This type never issues create, update or delete commands.
 final class NotesBridge: @unchecked Sendable {
     private let queue = DispatchQueue(label: "NativeNotes.AppleScript", qos: .userInitiated)
     @MainActor private func startNotes() async throws {
@@ -43,6 +48,7 @@ final class NotesBridge: @unchecked Sendable {
             }
         }
     }
+    /// Escapes an identifier before embedding it in an AppleScript string literal.
     static func literal(_ value: String) -> String {
         "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
     }

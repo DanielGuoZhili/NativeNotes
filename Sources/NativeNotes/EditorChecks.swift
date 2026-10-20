@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import Combine
 
+/// Regression checks for document editing, persistence, drag geometry and rich text.
 @MainActor enum EditorChecks {
     static func run(_ check: (Bool, String) throws -> Void) throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("NativeNotes-Editor-" + UUID().uuidString)

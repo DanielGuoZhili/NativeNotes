@@ -1,6 +1,7 @@
 import SwiftUI
 import QuartzCore
 
+/// Accepts typed drag payloads and delegates validated mutations to `LocalEditor`.
 struct EditorDropZone: ViewModifier {
     @ObservedObject var editor: LocalEditor
     let target: EditorDrop
@@ -29,6 +30,7 @@ struct EditorDropZone: ViewModifier {
     }
 }
 
+/// Complete local editing surface: toolbar, title, blocks, tables and todo reordering.
 struct LocalEditorView: View {
     @StateObject private var editor: LocalEditor
     let sourceHash: String
@@ -200,6 +202,7 @@ struct LocalEditorView: View {
     }
 }
 
+/// Editable table UI with row/column reordering and cell-content swapping.
 struct EditorTableView: View {
     @ObservedObject var editor: LocalEditor
     let blockID: String
@@ -258,11 +261,13 @@ struct EditorTableView: View {
     }
 }
 
+/// Reports stable card geometry only while no drag is active.
 private struct CardFrames: PreferenceKey {
     static var defaultValue: [String: CGRect] = [:]
     static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) { value.merge(nextValue(), uniquingKeysWith: { _, new in new }) }
 }
 
+/// Coordinates live todo-card movement while deferring document mutation until mouse-up.
 @MainActor final class CardReorder: ObservableObject {
     @Published var active: String?
     private(set) var order: [String] = []
@@ -328,6 +333,7 @@ private struct CardFrames: PreferenceKey {
     }
 }
 
+/// AppKit bridge for the dedicated todo drag handle.
 private struct TodoGrip: NSViewRepresentable {
     var move: (CGFloat, Bool, Bool) -> Void
     func makeNSView(context: Context) -> TodoGripView {
@@ -338,6 +344,7 @@ private struct TodoGrip: NSViewRepresentable {
     }
     func updateNSView(_ view: TodoGripView, context: Context) { view.move = move }
 }
+/// Converts raw mouse events into display-synchronized reorder updates.
 private final class TodoGripView: NSView {
     var move: ((CGFloat, Bool, Bool) -> Void)?
     override func draw(_ dirtyRect: NSRect) {
@@ -386,12 +393,15 @@ private final class TodoGripView: NSView {
     deinit { link?.invalidate() }
 }
 
+/// Objective-C callback target retained for the lifetime of the display link.
 private final class GripDisplayTarget: NSObject {
     weak var view: TodoGripView?
     @objc func tick(_ sender: CADisplayLink) { view?.displayTick() }
 }
 
+/// Isolates per-card motion so pointer updates do not invalidate the whole document.
 @MainActor final class CardMotion: ObservableObject { @Published var y: CGFloat = 0 }
+/// Applies immediate movement to the held card and animated displacement to neighboring cards.
 private struct MovingCardPosition: ViewModifier {
     @ObservedObject var motion: CardMotion
     let tracking: Bool

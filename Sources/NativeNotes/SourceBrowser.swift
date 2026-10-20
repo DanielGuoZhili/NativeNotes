@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Source pane with search, composable filters, grouped results and import selection.
 struct SourceBrowser: View {
     @ObservedObject var workspace: Workspace
     let importedIDs: Set<String>

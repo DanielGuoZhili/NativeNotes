@@ -2,8 +2,10 @@ import SwiftUI
 import CoreData
 import AppKit
 
+/// Enables isolated fixtures through an argument or environment variable.
 func isDemoLaunch() -> Bool { CommandLine.arguments.contains("--demo") || ProcessInfo.processInfo.environment["NATIVENOTES_DEMO"] == "1" }
 
+/// Core Data representation of a read-only source snapshot.
 @objc(CachedNote) final class CachedNote: NSManagedObject, Identifiable {
     @NSManaged var sourceID: String
     @NSManaged var title: String
@@ -14,6 +16,8 @@ func isDemoLaunch() -> Bool { CommandLine.arguments.contains("--demo") || Proces
     @NSManaged var importedAt: Date
 }
 
+/// Programmatic Core Data stack for imported source snapshots.
+/// Local editable documents deliberately use a separate JSON store.
 enum CacheStore {
     static let model: NSManagedObjectModel = {
         let model = NSManagedObjectModel()
@@ -46,6 +50,7 @@ enum CacheStore {
     }
 }
 
+/// Coordinates Notes discovery, explicit selection, import and refresh operations.
 @MainActor final class Workspace: ObservableObject {
     @Published var sources: [SourceNote] = []
     @Published var selected = Set<String>()
@@ -112,6 +117,7 @@ enum CacheStore {
     }
 }
 
+/// Root three-pane workspace and application-level commands.
 struct MainView: View {
     @Environment(\.managedObjectContext) private var context
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \CachedNote.importedAt, ascending: false)]) private var cached: FetchedResults<CachedNote>
@@ -190,6 +196,7 @@ struct MainView: View {
 }
 
 #if !SELF_TEST
+/// Application entry point and shared persistence bootstrap.
 @main struct NativeNotesApp: App {
     @NSApplicationDelegateAdaptor(EditorAppDelegate.self) private var appDelegate
     let container: NSPersistentContainer?

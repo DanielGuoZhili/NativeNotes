@@ -1,6 +1,8 @@
 import SwiftUI
 import AppKit
 
+/// SwiftUI adapter for the native rich-text editor used by paragraph and list blocks.
+/// The coordinator preserves selection, IME composition and RTF state across view updates.
 struct EditorTextInput: NSViewRepresentable {
     let id: String
     let text: String
@@ -145,6 +147,7 @@ struct EditorTextInput: NSViewRepresentable {
     }
 }
 
+/// NSTextView subclass that reports focus to the shared formatting toolbar safely.
 final class EditorNativeTextView: NSTextView {
     weak var formatting: RichFormatContext?
     override func becomeFirstResponder() -> Bool {
@@ -175,6 +178,7 @@ final class EditorNativeTextView: NSTextView {
     }
 }
 
+/// Sanitizes AppKit cursor rectangles before registration to prevent invalid-geometry crashes.
 enum CursorGeometry {
     static func clipped(_ rect: NSRect, to bounds: NSRect) -> NSRect? {
         func finite(_ value: NSRect) -> Bool {
@@ -188,6 +192,7 @@ enum CursorGeometry {
 
 /// Layout proposals must never mutate the live editor. A proposal may be speculative
 /// and SwiftUI can ask for several widths before choosing the actual view frame.
+/// Measures text off-screen and caches bounded width results during split-view resizing.
 final class TextMeasureCache {
     private var source: String?
     private var isHeading = false

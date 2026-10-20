@@ -1,17 +1,21 @@
 import Foundation
 
+/// Attachment metadata filters; `unknown` covers locked or unavailable source data.
 enum AttachmentFilter: String, CaseIterable, Identifiable {
     case all = "全部附件情况", none = "无附件", some = "含附件", many = "附件较多（≥5）", unknown = "附件情况未知"
     var id: String { rawValue }
 }
+/// Filters source notes by whether a local snapshot already exists.
 enum ImportFilter: String, CaseIterable, Identifiable {
     case all = "全部导入状态", notImported = "未导入", imported = "已导入"
     var id: String { rawValue }
 }
+/// Filters readable and password-protected source notes.
 enum AccessFilter: String, CaseIterable, Identifiable {
     case all = "全部访问状态", readable = "未受密码保护", locked = "受密码保护"
     var id: String { rawValue }
 }
+/// Composable source query evaluated entirely against catalog metadata.
 struct SourceFilter {
     var query = ""
     var folder: String? = nil

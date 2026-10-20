@@ -2,6 +2,8 @@ import Foundation
 import CoreData
 import AppKit
 
+/// Runs deterministic checks with temporary storage and demo data only.
+/// No test in this suite requests access to the user's Apple Notes library.
 @MainActor enum SelfTest {
     static func run() async {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("NativeNotes-Test-" + UUID().uuidString)
@@ -84,6 +86,7 @@ import AppKit
 }
 
 #if SELF_TEST
+/// Standalone entry point compiled only by `verify.sh`.
 @main struct ValidationRunner {
     static func main() async { await SelfTest.run() }
 }

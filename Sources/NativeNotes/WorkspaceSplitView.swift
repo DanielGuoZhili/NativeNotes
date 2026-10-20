@@ -14,6 +14,7 @@ struct WorkspaceSplitView: NSViewControllerRepresentable {
         controller.update(contents: [source, library, detail], revision: revision)
     }
 }
+/// Owns native divider tracking and avoids rebuilding hosted SwiftUI trees on width-only changes.
 final class WorkspaceSplitController: NSSplitViewController {
     let hosts: [NSHostingController<AnyView>]
     private var placed = false
@@ -61,6 +62,7 @@ final class WorkspaceSplitController: NSSplitViewController {
     }
 }
 
+/// Minimal content revision used to distinguish data changes from layout changes.
 struct WorkspaceRevision: Equatable {
     struct Note: Equatable {
         var id: String

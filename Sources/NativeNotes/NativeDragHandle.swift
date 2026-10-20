@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 
+/// Native drag source used by table rows, columns and cells.
 struct NativeDragHandle: NSViewRepresentable {
     @ObservedObject var editor: LocalEditor
     let kind: String
@@ -21,6 +22,7 @@ struct NativeDragHandle: NSViewRepresentable {
     }
 }
 
+/// Starts a local-only AppKit drag session with a typed, document-scoped payload.
 final class DragHandleView: NSView, NSDraggingSource {
     weak var editor: LocalEditor?
     var payload: EditorDrag?

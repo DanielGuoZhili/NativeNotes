@@ -2,6 +2,7 @@ import SwiftUI
 import WebKit
 import AppKit
 
+/// Produces a locked-down HTML document for read-only source preview.
 enum RichDocument {
     static func containsList(_ html: String) -> Bool {
         html.range(of: "<(ul|ol|li)\\b", options: [.regularExpression, .caseInsensitive]) != nil
@@ -32,6 +33,7 @@ enum RichDocument {
     }
 }
 
+/// WKWebView adapter used only for rendering the sanitized source snapshot.
 struct RichHTMLView: NSViewRepresentable {
     let html: String
     @Binding var loadError: String?
@@ -72,6 +74,7 @@ struct RichHTMLView: NSViewRepresentable {
     }
 }
 
+/// Switches between local editing, formatted source preview and source plain text.
 struct NoteDetailView: View {
     @Environment(\.managedObjectContext) private var context
     @ObservedObject var note: CachedNote

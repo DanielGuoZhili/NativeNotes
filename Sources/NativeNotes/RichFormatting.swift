@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 
+/// Converts attributed content to optional RTF while retaining plain text as the source of truth.
 enum RichTextCodec {
     static func decode(_ data: Data?, text: String) -> NSAttributedString? {
         guard let data, let value = try? NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil), value.string == text else { return nil }
@@ -38,8 +39,10 @@ enum RichTextCodec {
     }
 }
 
+/// Inline traits exposed by the formatting toolbar.
 enum InlineStyle { case bold, italic, underline, strike }
 
+/// Routes toolbar actions to the currently focused NativeNotes text view.
 @MainActor final class RichFormatContext: NSObject, ObservableObject {
     @Published private(set) var available = false
     private weak var view: EditorNativeTextView?
@@ -193,6 +196,7 @@ enum InlineStyle { case bold, italic, underline, strike }
     }
 }
 
+/// Responsive formatting controls that collapse into menus in narrow layouts.
 struct InlineFormattingTools: View {
     @ObservedObject var context: RichFormatContext
     @ViewBuilder private var styles: some View {
