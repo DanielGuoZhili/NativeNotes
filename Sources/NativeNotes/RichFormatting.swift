@@ -32,9 +32,16 @@ enum RichTextCodec {
     }
     static func linkURL(_ input: String) -> URL? {
         let raw = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty, !raw.contains(where: { $0.isWhitespace }), let url = URL(string: raw), let scheme = url.scheme?.lowercased(), ["https", "http", "mailto"].contains(scheme) else { return nil }
-        if scheme != "mailto" && (url.host?.isEmpty ?? true) { return nil }
-        if scheme == "mailto" && url.path.isEmpty { return nil }
+        guard !raw.isEmpty, !raw.contains(where: { $0.isWhitespace }),
+              let components = URLComponents(string: raw),
+              let scheme = components.scheme?.lowercased(),
+              ["https", "http", "mailto"].contains(scheme),
+              let url = components.url else { return nil }
+        if scheme == "mailto" {
+            // Foundation versions disagree on whether a mailto recipient is exposed as
+            // `path`; validate the scheme-specific text directly for deterministic CI.
+            guard let separator = raw.firstIndex(of: ":"), !raw[raw.index(after: separator)...].isEmpty else { return nil }
+        } else if components.host?.isEmpty ?? true { return nil }
         return url
     }
 }
